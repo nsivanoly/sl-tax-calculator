@@ -262,37 +262,42 @@ const CalculationPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Relief Selection */}
-        <div
-          style={{
-            background: '#fff',
-            borderRadius: 12,
-            border: '1px solid #f0f0f0',
-            padding: '16px 20px',
-            marginBottom: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 12,
-          }}
-        >
-          <span style={{ fontWeight: 600, color: '#1a1a2e' }}>
-            Apply <span style={monoStyle}>LKR {new Intl.NumberFormat('en-US').format(breakdown?.tax_free_allowance ?? 0)}</span> Relief to
-          </span>
-          <Radio.Group value={reliefOn} onChange={(e) => handleReliefChange(e.target.value)}>
-            <Radio.Button value="local">Local Income</Radio.Button>
-            <Radio.Button value="foreign">Foreign Income</Radio.Button>
-          </Radio.Group>
-        </div>
+        {/* Relief Selection — only show when there IS foreign income */}
+        {breakdown && breakdown.gross_income.foreign_employment > 0 && (
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 12,
+              border: '1px solid #f0f0f0',
+              padding: '16px 20px',
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+            }}
+          >
+            <span style={{ fontWeight: 600, color: '#1a1a2e' }}>
+              Apply <span style={monoStyle}>LKR {new Intl.NumberFormat('en-US').format(breakdown.tax_free_allowance)}</span> Relief to
+            </span>
+            <Radio.Group value={reliefOn} onChange={(e) => handleReliefChange(e.target.value)}>
+              <Radio.Button value="local">Local Income</Radio.Button>
+              <Radio.Button value="foreign">Foreign Income</Radio.Button>
+            </Radio.Group>
+          </div>
+        )}
 
-        {breakdown && (
-          <>
+        {breakdown && (() => {
+          const hasForeign = breakdown.gross_income.foreign_employment > 0;
+          // Section numbers shift when foreign section is hidden
+          const s = { gross: 1, domestic: 2, foreign: 3, grossTax: hasForeign ? 4 : 3, credits: hasForeign ? 5 : 4, net: hasForeign ? 6 : 5, effective: hasForeign ? 7 : 6 };
+          return <>
             {/* Section 1: Gross Income */}
-            <SectionCard title="1. Gross Income" accentColor="#1890ff">
+            <SectionCard title={`${s.gross}. Gross Income`} accentColor="#1890ff">
               <InfoRow label="Salary" value={formatLKR(breakdown.gross_income.salary)} />
               <InfoRow label="Interest" value={formatLKR(breakdown.gross_income.interest)} />
-              <InfoRow label="Foreign Currency Income" value={formatLKR(breakdown.gross_income.foreign_employment)} />
+              {hasForeign && <InfoRow label="Foreign Currency Income" value={formatLKR(breakdown.gross_income.foreign_employment)} />}
               <InfoRow label="Other" value={formatLKR(breakdown.gross_income.other)} />
               <div style={{ marginTop: 8 }}>
                 <InfoRow label="Total Gross Income" value={formatLKR(breakdown.gross_income.total)} strong summary />
@@ -304,7 +309,7 @@ const CalculationPage: React.FC = () => {
               accentColor="#1a7a3a"
               title={
                 <>
-                  2. Domestic Income Tax
+                  {s.domestic}. Domestic Income Tax
                   {breakdown.relief_applied_to === 'local'
                     ? <Tag color="green" style={{ borderRadius: 12, border: 'none' }}>Progressive Slabs (with {(breakdown.tax_free_allowance / 1000000).toFixed(1)}M Relief)</Tag>
                     : <Tag color="red" style={{ borderRadius: 12, border: 'none' }}>Flat {((breakdown.domestic_tax.slab_breakdown[breakdown.domestic_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%</Tag>
@@ -350,58 +355,62 @@ const CalculationPage: React.FC = () => {
               {renderSlabChart(breakdown.domestic_tax.slab_breakdown, 'Domestic Slab Visualization')}
             </SectionCard>
 
-            {/* Section 3: Foreign Income Tax */}
-            <SectionCard
-              accentColor="#0891b2"
-              title={
-                <>
-                  3. Foreign Income Tax
-                  {breakdown.relief_applied_to === 'foreign'
-                    ? <Tag color="green" style={{ borderRadius: 12, border: 'none' }}>Foreign Brackets (with {(breakdown.tax_free_allowance / 1000000).toFixed(1)}M Relief)</Tag>
-                    : <Tag color="red" style={{ borderRadius: 12, border: 'none' }}>Flat {((breakdown.foreign_tax.slab_breakdown[breakdown.foreign_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%</Tag>
-                  }
-                </>
-              }
-            >
-              <div style={{ marginBottom: 16 }}>
-                <InfoRow label="Foreign Currency Income" value={formatLKR(breakdown.foreign_tax.foreign_income)} strong />
-              </div>
+            {/* Section 3: Foreign Income Tax — only show when there IS foreign income */}
+            {hasForeign && (
+              <SectionCard
+                accentColor="#0891b2"
+                title={
+                  <>
+                    {s.foreign}. Foreign Income Tax
+                    {breakdown.relief_applied_to === 'foreign'
+                      ? <Tag color="green" style={{ borderRadius: 12, border: 'none' }}>Foreign Brackets (with {(breakdown.tax_free_allowance / 1000000).toFixed(1)}M Relief)</Tag>
+                      : <Tag color="red" style={{ borderRadius: 12, border: 'none' }}>Flat {((breakdown.foreign_tax.slab_breakdown[breakdown.foreign_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%</Tag>
+                    }
+                  </>
+                }
+              >
+                <div style={{ marginBottom: 16 }}>
+                  <InfoRow label="Foreign Currency Income" value={formatLKR(breakdown.foreign_tax.foreign_income)} strong />
+                </div>
 
-              <Table
-                dataSource={breakdown.foreign_tax.slab_breakdown.map((s, i) => ({ ...s, key: i }))}
-                columns={slabColumns}
-                pagination={false}
-                size="small"
-                summary={() => (
-                  <Table.Summary>
-                    <Table.Summary.Row style={{ background: '#fafafa' }}>
-                      <Table.Summary.Cell index={0}><strong>Foreign Tax</strong></Table.Summary.Cell>
-                      <Table.Summary.Cell index={1} align="right">
-                        <strong style={monoStyle}>{formatLKR(breakdown.foreign_tax.foreign_income)}</strong>
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={2} />
-                      <Table.Summary.Cell index={3} align="right">
-                        <strong style={monoStyle}>{formatLKR(breakdown.foreign_tax.tax)}</strong>
-                      </Table.Summary.Cell>
-                    </Table.Summary.Row>
-                  </Table.Summary>
-                )}
-              />
+                <Table
+                  dataSource={breakdown.foreign_tax.slab_breakdown.map((s, i) => ({ ...s, key: i }))}
+                  columns={slabColumns}
+                  pagination={false}
+                  size="small"
+                  summary={() => (
+                    <Table.Summary>
+                      <Table.Summary.Row style={{ background: '#fafafa' }}>
+                        <Table.Summary.Cell index={0}><strong>Foreign Tax</strong></Table.Summary.Cell>
+                        <Table.Summary.Cell index={1} align="right">
+                          <strong style={monoStyle}>{formatLKR(breakdown.foreign_tax.foreign_income)}</strong>
+                        </Table.Summary.Cell>
+                        <Table.Summary.Cell index={2} />
+                        <Table.Summary.Cell index={3} align="right">
+                          <strong style={monoStyle}>{formatLKR(breakdown.foreign_tax.tax)}</strong>
+                        </Table.Summary.Cell>
+                      </Table.Summary.Row>
+                    </Table.Summary>
+                  )}
+                />
 
-              {renderSlabChart(breakdown.foreign_tax.slab_breakdown, 'Foreign Slab Visualization')}
-            </SectionCard>
+                {renderSlabChart(breakdown.foreign_tax.slab_breakdown, 'Foreign Slab Visualization')}
+              </SectionCard>
+            )}
 
             {/* Section 4: Gross Tax */}
-            <SectionCard title="4. Gross Tax" accentColor="#fa8c16">
+            <SectionCard title={`${s.grossTax}. Gross Tax`} accentColor="#fa8c16">
               <InfoRow label="Domestic Tax" value={formatLKR(breakdown.domestic_tax.tax)} />
-              <InfoRow label="Foreign Tax" value={formatLKR(breakdown.foreign_tax.tax)} />
+              {hasForeign && (
+                <InfoRow label="Foreign Tax" value={formatLKR(breakdown.foreign_tax.tax)} />
+              )}
               <div style={{ marginTop: 8 }}>
                 <InfoRow label="Total Gross Tax" value={formatLKR(breakdown.gross_tax)} strong summary />
               </div>
             </SectionCard>
 
             {/* Section 5: Credits */}
-            <SectionCard title="5. Tax Credits" accentColor="#722ed1">
+            <SectionCard title={`${s.credits}. Tax Credits`} accentColor="#722ed1">
               <Table
                 dataSource={creditData}
                 columns={creditColumns}
@@ -477,7 +486,7 @@ const CalculationPage: React.FC = () => {
             </div>
 
             {/* Section 7: Effective Rate */}
-            <SectionCard title="7. Effective Tax Rate" accentColor="#f59e0b">
+            <SectionCard title={`${s.effective}. Effective Tax Rate`} accentColor="#f59e0b">
               <div style={{ textAlign: 'center', padding: '8px 0' }}>
                 <div style={{ ...monoStyle, fontSize: 28, fontWeight: 700, color: '#1a7a3a' }}>
                   {formatPct(breakdown.effective_rate_pct)}
@@ -486,7 +495,7 @@ const CalculationPage: React.FC = () => {
               </div>
             </SectionCard>
           </>
-        )}
+        })()}
       </div>
 
       <style>{`
