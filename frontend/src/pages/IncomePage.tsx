@@ -63,15 +63,23 @@ const IncomePage: React.FC = () => {
 
   const whtRate = taxConfig?.wht_rate_resident ?? 0;
 
-  const getWhtWarning = (entry: IncomeEntry): string | null => {
-    if (entry.category !== 'interest' || whtRate <= 0 || entry.amount_lkr <= 0) return null;
+  const getWhtStatus = (entry: IncomeEntry): 'ok' | 'under' | 'over' => {
+    if (entry.category !== 'interest' || whtRate <= 0 || entry.amount_lkr <= 0) return 'ok';
     const expected = entry.amount_lkr * whtRate;
-    const diff = Math.abs(entry.wht_deducted - expected);
-    if (diff <= 1) return null; // rounding tolerance
-    if (entry.wht_deducted < expected) {
-      return `Under-deducted: ${formatLKR(entry.wht_deducted)} vs expected ${formatLKR(expected)} (${(whtRate * 100).toFixed(0)}%)`;
+    const diff = entry.wht_deducted - expected;
+    if (Math.abs(diff) <= 1) return 'ok';
+    return diff < 0 ? 'under' : 'over';
+  };
+
+  const getWhtWarning = (entry: IncomeEntry): string | null => {
+    const status = getWhtStatus(entry);
+    if (status === 'ok') return null;
+    const expected = entry.amount_lkr * whtRate;
+    const ratePct = (whtRate * 100).toFixed(0);
+    if (status === 'under') {
+      return `Under-deducted: ${formatLKR(entry.wht_deducted)} vs expected ${formatLKR(expected)} (${ratePct}%)`;
     }
-    return `Over-deducted: ${formatLKR(entry.wht_deducted)} vs expected ${formatLKR(expected)} (${(whtRate * 100).toFixed(0)}%)`;
+    return `Over-deducted: ${formatLKR(entry.wht_deducted)} vs expected ${formatLKR(expected)} (${ratePct}%)`;
   };
 
   const fetchEntries = useCallback(async () => {
@@ -323,7 +331,12 @@ const IncomePage: React.FC = () => {
             rowKey="id"
             pagination={{ pageSize: 10 }}
             scroll={{ x: 800 }}
-            rowClassName={(record) => `filing-row${record.is_active ? '' : ' row-inactive'}`}
+            rowClassName={(record) => {
+              const classes = ['filing-row'];
+              if (!record.is_active) classes.push('row-inactive');
+              if (getWhtStatus(record) === 'under') classes.push('row-wht-under');
+              return classes.join(' ');
+            }}
             summary={() => (
               <Table.Summary fixed>
                 <Table.Summary.Row style={{ background: '#fafafa' }}>
@@ -372,6 +385,12 @@ const IncomePage: React.FC = () => {
       <style>{`
         .filing-row:hover td {
           background: #f6ffed !important;
+        }
+        .row-wht-under td {
+          background: #fffbe6 !important;
+        }
+        .row-wht-under:hover td {
+          background: #fff1b8 !important;
         }
         .ant-table-thead > tr > th {
           background: #fafafa !important;
