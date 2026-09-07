@@ -78,7 +78,7 @@ Sri Lanka uses a progressive tax slab system:
 
 **Key rules:**
 - **Interest income exemption**: first LKR 1,500,000 exempt for resident individuals
-- **WHT on interest**: 5% (credited against final tax liability)
+- **WHT on interest**: 5% (FY 2023/24–2024/25) → 10% (FY 2025/26+), credited against final tax liability
 - **Foreign employment income**: taxed separately at 15% flat rate (FY 2025/26+)
 - **PAYE**: credited against final tax
 

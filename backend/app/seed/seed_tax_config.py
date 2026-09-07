@@ -67,12 +67,12 @@ CONFIGS = [
         OLD_LOCAL_SLABS,
         [],  # no foreign slabs
     ),
-    # --- New system: separate foreign income tax, different slabs ---
+    # --- New system: separate foreign income tax, different slabs, WHT 10% ---
     (
         "2025/26",
         Decimal("1800000"),
         Decimal("1500000"),
-        Decimal("0.05"),
+        Decimal("0.10"),
         True,
         NEW_LOCAL_SLABS,
         NEW_FOREIGN_SLABS,
@@ -81,7 +81,7 @@ CONFIGS = [
         "2026/27",
         Decimal("1800000"),
         Decimal("1500000"),
-        Decimal("0.05"),
+        Decimal("0.10"),
         True,
         NEW_LOCAL_SLABS,
         NEW_FOREIGN_SLABS,
