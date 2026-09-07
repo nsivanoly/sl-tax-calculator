@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Typography, Button, Spin, message, Tag, Radio, Dropdown } from 'antd';
-import { CalculatorOutlined, DownloadOutlined, FilePdfOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { Table, Typography, Button, Spin, message, Tag, Radio, Dropdown, Alert } from 'antd';
+import { CalculatorOutlined, DownloadOutlined, FilePdfOutlined, FileExcelOutlined, WarningOutlined } from '@ant-design/icons';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { calculateTax, exportTaxSummaryPdf, exportTaxSummaryXlsx } from '../api/client';
 import { useFilingContext } from '../context/AuthContext';
@@ -409,6 +409,35 @@ const CalculationPage: React.FC = () => {
                 size="small"
               />
             </SectionCard>
+
+            {/* WHT Validation Warnings */}
+            {breakdown.wht_warnings && breakdown.wht_warnings.length > 0 && (
+              <SectionCard title="⚠️ WHT Validation Warnings" accentColor="#faad14">
+                {breakdown.wht_warnings.map((w, i) => (
+                  <Alert
+                    key={i}
+                    type="warning"
+                    showIcon
+                    icon={<WarningOutlined />}
+                    style={{ marginBottom: i < breakdown.wht_warnings.length - 1 ? 8 : 0 }}
+                    message={
+                      <span>
+                        <strong>{w.source_name || 'Unknown'}</strong>
+                        {w.account_number && <span style={{ color: '#8c8c8c' }}> ({w.account_number})</span>}
+                      </span>
+                    }
+                    description={
+                      <div>
+                        <div>{w.message}</div>
+                        <div style={{ ...monoStyle, marginTop: 4, fontSize: 12, color: '#8c8c8c' }}>
+                          Income: {formatLKR(w.amount_lkr)} · WHT deducted: {formatLKR(w.wht_deducted)} · Expected ({w.expected_rate_pct}%): {formatLKR(w.expected_wht)}
+                        </div>
+                      </div>
+                    }
+                  />
+                ))}
+              </SectionCard>
+            )}
 
             {/* Section 6: Net Tax Payable */}
             <div

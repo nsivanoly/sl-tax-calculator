@@ -109,6 +109,17 @@ export interface Credits {
   total_credits: number;
 }
 
+export interface WhtWarning {
+  entry_id: string;
+  source_name: string | null;
+  account_number: string | null;
+  amount_lkr: number;
+  wht_deducted: number;
+  expected_wht: number;
+  expected_rate_pct: number;
+  message: string;
+}
+
 export interface TaxBreakdown {
   gross_income: GrossIncome;
   exemptions: ExemptionDetail;
@@ -120,6 +131,7 @@ export interface TaxBreakdown {
   credits: Credits;
   net_tax_payable: number;
   effective_rate_pct: number;
+  wht_warnings: WhtWarning[];
 }
 
 export interface OptimizationResult {

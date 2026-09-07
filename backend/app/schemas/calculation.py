@@ -51,6 +51,17 @@ class Credits(BaseModel):
     total_credits: float
 
 
+class WhtWarning(BaseModel):
+    entry_id: str
+    source_name: str | None
+    account_number: str | None
+    amount_lkr: float
+    wht_deducted: float
+    expected_wht: float
+    expected_rate_pct: float
+    message: str
+
+
 class TaxBreakdown(BaseModel):
     gross_income: GrossIncome
     exemptions: ExemptionDetail
@@ -62,6 +73,7 @@ class TaxBreakdown(BaseModel):
     credits: Credits
     net_tax_payable: float
     effective_rate_pct: float
+    wht_warnings: list[WhtWarning] = []
 
 
 class OptimizationResult(BaseModel):

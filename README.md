@@ -79,6 +79,7 @@ Sri Lanka uses a progressive tax slab system:
 **Key rules:**
 - **Interest income exemption**: first LKR 1,500,000 exempt for resident individuals
 - **WHT on interest**: 5% (FY 2023/24–2024/25) → 10% (FY 2025/26+), credited against final tax liability
+- **WHT validation**: the calculator checks each interest entry's actual WHT against the expected rate and flags mismatches (under- or over-deduction) as warnings
 - **Foreign employment income**: taxed separately at 15% flat rate (FY 2025/26+)
 - **PAYE**: credited against final tax
 
@@ -193,14 +194,15 @@ sl-tax-calculator/
 
 ## 🧮 Tax Calculation Algorithm
 
-The engine follows a 6-step process:
+The engine follows a 7-step process:
 
-1. **Aggregate** — sum income by category (salary, interest, foreign, other)
-2. **Apply exemptions** — exempt selected interest entries up to the cap (WHT credits are preserved even on exempt income)
-3. **Subtract tax-free allowance** → assessable income
-4. **Apply progressive slabs** — walk through rate bands (rates vary by FY; e.g. 2025/26: 6% → 18% → 24% → 30% → 36%)
-5. **Sum credits** — WHT on interest + PAYE + self-assessment payments + manual adjustments
-6. **Net payable** = gross tax − total credits (negative = refund)
+1. **Validate WHT** — check each interest entry's WHT deducted against the FY's statutory rate; flag under/over-deductions as warnings
+2. **Aggregate** — sum income by category (salary, interest, foreign, other)
+3. **Apply exemptions** — exempt selected interest entries up to the cap (WHT credits are preserved even on exempt income)
+4. **Subtract tax-free allowance** → assessable income
+5. **Apply progressive slabs** — walk through rate bands (rates vary by FY; e.g. 2025/26: 6% → 18% → 24% → 30% → 36%)
+6. **Sum credits** — WHT on interest + PAYE + self-assessment payments + manual adjustments
+7. **Net payable** = gross tax − total credits (negative = refund)
 
 ### Optimizer Strategy
 

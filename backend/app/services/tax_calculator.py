@@ -19,6 +19,7 @@ from app.schemas.calculation import (
     GrossIncome,
     SlabDetail,
     TaxBreakdown,
+    WhtWarning,
 )
 
 ZERO = Decimal("0")
@@ -96,6 +97,54 @@ async def _get_adjustments(db: AsyncSession, filing_id: uuid.UUID) -> list[TaxAd
     return list(result.scalars().all())
 
 
+def _validate_wht(entries: list[IncomeEntry], wht_rate: Decimal) -> list[WhtWarning]:
+    """Check that WHT deducted on interest entries matches the expected rate.
+
+    Returns warnings for entries where the actual WHT differs from
+    amount × wht_rate by more than LKR 1 (to allow rounding).
+    """
+    warnings: list[WhtWarning] = []
+    if wht_rate <= ZERO:
+        return warnings
+
+    for entry in entries:
+        if entry.category != "interest":
+            continue
+        amt = entry.amount_lkr or ZERO
+        wht = entry.wht_deducted or ZERO
+        if amt <= ZERO:
+            continue
+
+        expected = amt * wht_rate
+        diff = abs(wht - expected)
+        # Allow LKR 1 tolerance for rounding
+        if diff > Decimal("1"):
+            actual_pct = (wht / amt * 100) if amt > ZERO else ZERO
+            if wht < expected:
+                msg = (
+                    f"WHT under-deducted: LKR {float(wht):,.2f} vs expected "
+                    f"LKR {float(expected):,.2f} ({float(wht_rate * 100):.0f}%). "
+                    f"You may owe the difference."
+                )
+            else:
+                msg = (
+                    f"WHT over-deducted: LKR {float(wht):,.2f} vs expected "
+                    f"LKR {float(expected):,.2f} ({float(wht_rate * 100):.0f}%). "
+                    f"Excess will be credited."
+                )
+            warnings.append(WhtWarning(
+                entry_id=str(entry.id),
+                source_name=entry.source_name,
+                account_number=entry.account_number,
+                amount_lkr=float(amt),
+                wht_deducted=float(wht),
+                expected_wht=float(expected),
+                expected_rate_pct=float(wht_rate * 100),
+                message=msg,
+            ))
+    return warnings
+
+
 async def calculate_tax(
     db: AsyncSession,
     filing_id: str,
@@ -107,6 +156,10 @@ async def calculate_tax(
     config = await _get_tax_config(db, filing.fiscal_year)
     entries = await _get_income_entries(db, fid)
     adjustments = await _get_adjustments(db, fid)
+
+    # --- Validate WHT on interest entries ---
+    wht_rate = config.wht_rate_resident
+    wht_warnings = _validate_wht(entries, wht_rate)
 
     # --- Aggregate by category ---
     salary_total = ZERO
@@ -216,6 +269,7 @@ async def calculate_tax(
             ),
             net_tax_payable=net_tax,
             effective_rate_pct=effective_rate,
+            wht_warnings=wht_warnings,
         )
 
     # ──────────────────────────────────────────────────────────
@@ -327,4 +381,5 @@ async def calculate_tax(
         ),
         net_tax_payable=net_tax,
         effective_rate_pct=effective_rate,
+        wht_warnings=wht_warnings,
     )
