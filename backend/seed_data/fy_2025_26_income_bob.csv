@@ -1,0 +1,19 @@
+category,source_name,account_number,amount_lkr,amount_foreign,foreign_currency,exchange_rate,received_date,wht_deducted,paye_deducted,description
+foreign_employment,Global Tech,,450000.00,1500.00,EUR,300.00,2025-04-01,,,EUR remote employment
+foreign_employment,Global Tech,,460000.00,1500.00,EUR,306.67,2025-05-01,,,EUR remote employment
+foreign_employment,Global Tech,,470000.00,1500.00,EUR,313.33,2025-06-01,,,EUR remote employment
+foreign_employment,Global Tech,,475000.00,1500.00,EUR,316.67,2025-07-01,,,EUR remote employment
+foreign_employment,Global Tech,,480000.00,1500.00,EUR,320.00,2025-08-01,,,EUR remote employment
+foreign_employment,Global Tech,,485000.00,1500.00,EUR,323.33,2025-09-01,,,EUR remote employment
+foreign_employment,Global Tech,,490000.00,1500.00,EUR,326.67,2025-10-01,,,EUR remote employment
+foreign_employment,Global Tech,,495000.00,1500.00,EUR,330.00,2025-11-01,,,EUR remote employment
+foreign_employment,Global Tech,,500000.00,1500.00,EUR,333.33,2025-12-01,,,EUR remote employment
+foreign_employment,Global Tech,,505000.00,1500.00,EUR,336.67,2026-01-01,,,EUR remote employment
+foreign_employment,Global Tech,,510000.00,1500.00,EUR,340.00,2026-02-01,,,EUR remote employment
+foreign_employment,Global Tech,,515000.00,1500.00,EUR,343.33,2026-03-01,,,EUR remote employment
+interest,Lanka Bank,FD-400001,75000.00,,,,,,3750.00,Lanka Bank FD interest
+interest,Lanka Bank,FD-400002,75000.00,,,,,,3750.00,Lanka Bank FD interest
+interest,Lanka Bank,FD-400003,75000.00,,,,,,3750.00,Lanka Bank FD interest
+interest,Metro Bank,FD-500001,85000.00,,,,,,4250.00,Metro Bank FD interest
+interest,Metro Bank,FD-500002,42000.00,,,,,,2100.00,Metro Bank FD interest
+interest,Metro Bank,SA-500003,5500.00,,,,,,275.00,Metro Bank savings interest

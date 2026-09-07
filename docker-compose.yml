@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sltax
+      POSTGRES_USER: taxuser
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-taxpass123}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taxuser -d sltax"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://taxuser:${DB_PASSWORD:-taxpass123}@db:5432/sltax
+      CORS_ORIGINS: "http://localhost:3100,http://localhost:80"
+      SEED_MODE: ${SEED_MODE:-sample}
+    ports:
+      - "8100:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./backend:/app
+      - ./user_data:/user_data
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3100:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

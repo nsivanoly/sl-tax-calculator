@@ -1,0 +1,8 @@
+category,source_name,account_number,amount_lkr,amount_foreign,foreign_currency,exchange_rate,received_date,wht_deducted,paye_deducted,description
+salary,Acme Corp,,4200000.00,,,,,,1050000.00,Annual salary FY 2023/24
+interest,Lanka Bank,FD-100001,120000.00,,,,2024-03-31,6000.00,,Lanka Bank FD interest
+interest,Lanka Bank,FD-100002,125000.00,,,,2024-03-31,6250.00,,Lanka Bank FD interest
+interest,Lanka Bank,FD-100003,120000.00,,,,2024-03-31,6000.00,,Lanka Bank FD interest
+interest,Island Finance,FD-200001,100000.00,,,,2024-03-31,5000.00,,Island Finance FD interest
+interest,Island Finance,FD-200002,100000.00,,,,2024-03-31,5000.00,,Island Finance FD interest
+interest,Island Finance,FD-200003,100000.00,,,,2024-03-31,5000.00,,Island Finance FD interest

@@ -1,0 +1,104 @@
+.app-layout {
+  min-height: 100vh;
+}
+
+.logo {
+  padding: 16px;
+  text-align: center;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 16px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s;
+}
+
+.site-layout {
+  background: transparent;
+}
+
+.content-area {
+  margin: 24px 16px;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 8px;
+  min-height: 360px;
+}
+
+.header-area {
+  background: #ffffff;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a5c2a;
+  margin-left: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sider-trigger {
+  font-size: 18px;
+  line-height: 64px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.sider-trigger:hover {
+  color: #1a7a3a;
+}
+
+.header-user-name {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Inactive row styling for toggled-off entries */
+.row-inactive td {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.row-inactive td .ant-switch {
+  opacity: 1;
+  text-decoration: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content-area {
+    margin: 16px 8px;
+    padding: 16px;
+    min-height: 240px;
+  }
+
+  .header-area {
+    padding: 0 12px;
+  }
+
+  .header-title {
+    font-size: 16px;
+  }
+
+  .logo {
+    font-size: 14px;
+    padding: 12px 4px;
+    margin: 8px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-title {
+    display: none;
+  }
+}

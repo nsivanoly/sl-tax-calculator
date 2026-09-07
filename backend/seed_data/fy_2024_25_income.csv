@@ -1,0 +1,17 @@
+category,source_name,account_number,amount_lkr,amount_foreign,foreign_currency,exchange_rate,received_date,wht_deducted,paye_deducted,description
+salary,Acme Corp,,4500000.00,,,,,,"980000.00",Annual salary FY 2024/25
+interest,Lanka Bank,FD-100001,78000.00,,,,2025-03-31,3900.00,,Lanka Bank FD interest
+interest,Lanka Bank,FD-100002,78000.00,,,,2025-03-31,3900.00,,Lanka Bank FD interest
+interest,Lanka Bank,FD-100003,78000.00,,,,2025-03-31,3900.00,,Lanka Bank FD interest
+interest,Island Finance,FD-200001,65000.00,,,,2025-03-31,3250.00,,Island Finance FD interest
+interest,Island Finance,FD-200002,65000.00,,,,2025-03-31,3250.00,,Island Finance FD interest
+interest,Island Finance,FD-200003,65000.00,,,,2025-03-31,3250.00,,Island Finance FD interest
+interest,Metro Bank,SA-300001,4500.00,,,,2025-03-31,225.00,,Metro Bank savings interest
+interest,Metro Bank,FD-300002,85000.00,,,,2025-03-31,4250.00,,Metro Bank FD interest
+interest,Metro Bank,FD-300003,70000.00,,,,2025-03-31,3500.00,,Metro Bank FD interest
+interest,Metro Bank,FD-300004,38000.00,,,,2025-03-31,1900.00,,Metro Bank FD interest
+interest,Metro Bank,FD-300005,21000.00,,,,2025-03-31,1050.00,,Metro Bank FD interest
+foreign_employment,Overseas Consulting,,320000.00,1100.00,USD,290.91,2024-06-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,340000.00,1150.00,USD,295.65,2024-09-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,355000.00,1200.00,USD,295.83,2024-12-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,365000.00,1250.00,USD,292.00,2025-03-15,,,USD remote consulting

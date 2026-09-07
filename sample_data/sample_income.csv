@@ -1,0 +1,13 @@
+category,source_name,account_number,amount_lkr,amount_foreign,foreign_currency,exchange_rate,received_date,wht_deducted,paye_deducted,description
+salary,Acme Corp,,4800000.00,,,,,,720000.00,Annual salary – FY 2025/26
+interest,Lanka Bank,FD-100001,85000.00,,,,2026-03-31,8500.00,,Lanka Bank FD interest
+interest,Lanka Bank,FD-100002,65000.00,,,,2026-03-31,6500.00,,Lanka Bank FD interest
+interest,Lanka Bank,FD-100003,45000.00,,,,2026-03-31,4500.00,,Lanka Bank FD interest
+interest,Island Finance,FD-200001,72000.00,,,,2026-03-31,7200.00,,Island Finance FD interest
+interest,Island Finance,FD-200002,55000.00,,,,2026-03-31,5500.00,,Island Finance FD interest
+interest,Metro Bank,SA-300001,12500.00,,,,2026-03-31,1250.00,,Metro Bank savings interest
+interest,Metro Bank,FD-300002,92000.00,,,,2026-03-31,9200.00,,Metro Bank FD interest
+foreign_employment,Overseas Consulting,,350000.00,1200.00,USD,291.67,2025-06-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,380000.00,1300.00,USD,292.31,2025-09-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,420000.00,1425.00,USD,294.74,2025-12-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,460000.00,1520.00,USD,302.63,2026-03-15,,,USD remote consulting
