@@ -163,6 +163,7 @@ const DashboardPage: React.FC = () => {
   const recommended = optimized.recommended_relief_on;
   const hasForeign = best.gross_income.foreign_employment > 0;
   const hasDomestic = (best.gross_income.salary + best.gross_income.interest + best.gross_income.other) > 0;
+  const hasBoth = hasForeign && hasDomestic;
 
   // Waterfall data for the optimized breakdown
   const waterfallSteps = [
@@ -188,7 +189,7 @@ const DashboardPage: React.FC = () => {
       value: -best.tax_free_allowance,
       color: '#0891b2',
       icon: <GiftOutlined />,
-      desc: hasForeign ? `Applied to ${recommended === 'local' ? 'local' : 'foreign'} income` : 'Tax-free allowance',
+      desc: hasBoth ? `Applied to ${recommended === 'local' ? 'local' : 'foreign'} income` : 'Tax-free allowance',
     },
     {
       title: 'Gross Tax',
@@ -286,7 +287,7 @@ const DashboardPage: React.FC = () => {
             </Col>
 
             <Col xs={24} md={8}>
-              {savings > 0 && hasForeign ? (
+              {savings > 0 && hasBoth ? (
                 <div
                   style={{
                     background: '#f6ffed',
@@ -319,10 +320,10 @@ const DashboardPage: React.FC = () => {
                 >
                   <CheckCircleOutlined style={{ fontSize: 22, color: '#1a7a3a' }} />
                   <div style={{ color: '#1a1a2e', fontSize: 15, fontWeight: 600, marginTop: 4 }}>
-                    Both options equal
+                    {hasBoth ? 'Both options equal' : 'Optimized'}
                   </div>
                   <Text style={{ color: '#8c8c8c', fontSize: 13 }}>
-                    No savings from switching relief
+                    {hasBoth ? 'No savings from switching relief' : `Tax-free relief applied to ${hasForeign ? 'foreign' : 'local'} income`}
                   </Text>
                 </div>
               )}
@@ -375,8 +376,8 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ====== RELIEF COMPARISON (only shown when FY has foreign tax AND user has foreign income) ====== */}
-      {taxConfig?.has_foreign_tax !== false && hasForeign && (
+      {/* ====== RELIEF COMPARISON (only shown when FY has foreign tax AND user has BOTH income types) ====== */}
+      {taxConfig?.has_foreign_tax !== false && hasBoth && (
       <div style={{ ...container, marginBottom: 16 }}>
         <SectionHeader icon={<SwapOutlined />}>
           Relief Comparison — Where to Apply {formatLKR(best.tax_free_allowance)}?

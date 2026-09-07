@@ -262,8 +262,8 @@ const CalculationPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Relief Selection — only show when there IS foreign income */}
-        {breakdown && breakdown.gross_income.foreign_employment > 0 && (
+        {/* Relief Selection — only show when there is BOTH domestic and foreign income */}
+        {breakdown && breakdown.gross_income.foreign_employment > 0 && (breakdown.gross_income.salary + breakdown.gross_income.interest + breakdown.gross_income.other) > 0 && (
           <div
             style={{
               background: '#fff',

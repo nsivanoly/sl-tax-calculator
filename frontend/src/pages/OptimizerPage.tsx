@@ -102,6 +102,7 @@ const OptimizerPage: React.FC = () => {
   const bestResult = recommendedReliefOn === 'local' ? localResult : foreignResult;
   const hasForeign = (localResult?.gross_income.foreign_employment ?? 0) > 0;
   const hasDomestic = ((localResult?.gross_income.salary ?? 0) + (localResult?.gross_income.interest ?? 0) + (localResult?.gross_income.other ?? 0)) > 0;
+  const hasBoth = hasForeign && hasDomestic;
 
   const renderComparisonCard = (
     result: TaxBreakdown,
@@ -203,7 +204,7 @@ const OptimizerPage: React.FC = () => {
           Tax Optimizer
         </Typography.Title>
         <Typography.Paragraph style={{ color: '#8c8c8c', marginTop: 4, marginBottom: 0 }}>
-          {hasForeign
+          {hasBoth
             ? 'Compare applying the tax-free relief to local income vs foreign income. The optimizer picks the option that minimizes your net tax payable.'
             : 'Optimize your tax calculation. The optimizer finds the best exemption strategy to minimize your net tax payable.'}
         </Typography.Paragraph>
@@ -223,15 +224,17 @@ const OptimizerPage: React.FC = () => {
               Run Optimizer
             </Button>
           </Col>
-          <Col>
-            <Button size="large" onClick={handleCompare} loading={loading} style={{ borderRadius: 8 }}>
-              Compare Both Options
-            </Button>
-          </Col>
+          {hasBoth && (
+            <Col>
+              <Button size="large" onClick={handleCompare} loading={loading} style={{ borderRadius: 8 }}>
+                Compare Both Options
+              </Button>
+            </Col>
+          )}
         </Row>
 
-        {/* Savings Banner — only when there IS foreign income to compare */}
-        {savings > 0 && recommendedReliefOn && hasForeign && (
+        {/* Savings Banner — only when there is BOTH domestic and foreign income to compare */}
+        {savings > 0 && recommendedReliefOn && hasBoth && (
           <div
             style={{
               background: '#f6ffed',
@@ -262,7 +265,7 @@ const OptimizerPage: React.FC = () => {
         )}
 
         {/* Two-column comparison — only when there is BOTH domestic and foreign income */}
-        {hasForeign && hasDomestic ? (
+        {hasBoth ? (
           <Row gutter={[24, 24]}>
             {localResult && (
               <Col xs={24} md={12}>
@@ -327,7 +330,7 @@ const OptimizerPage: React.FC = () => {
             </div>
             <TaxBreakdownCard
               breakdown={bestResult}
-              title={hasForeign ? `Recommended: Relief on ${recommendedReliefOn === 'local' ? 'Local' : 'Foreign'} Income` : 'Optimized Tax Breakdown'}
+              title={hasBoth ? `Recommended: Relief on ${recommendedReliefOn === 'local' ? 'Local' : 'Foreign'} Income` : 'Optimized Tax Breakdown'}
             />
           </div>
         )}
