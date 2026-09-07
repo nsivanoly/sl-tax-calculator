@@ -334,7 +334,9 @@ const IncomePage: React.FC = () => {
             rowClassName={(record) => {
               const classes = ['filing-row'];
               if (!record.is_active) classes.push('row-inactive');
-              if (getWhtStatus(record) === 'under') classes.push('row-wht-under');
+              const whtStatus = getWhtStatus(record);
+              if (whtStatus === 'under') classes.push('row-wht-under');
+              if (whtStatus === 'over') classes.push('row-wht-over');
               return classes.join(' ');
             }}
             summary={() => (
@@ -391,6 +393,12 @@ const IncomePage: React.FC = () => {
         }
         .row-wht-under:hover td {
           background: #fff1b8 !important;
+        }
+        .row-wht-over td {
+          background: #fff0f0 !important;
+        }
+        .row-wht-over:hover td {
+          background: #ffccc7 !important;
         }
         .ant-table-thead > tr > th {
           background: #fafafa !important;
