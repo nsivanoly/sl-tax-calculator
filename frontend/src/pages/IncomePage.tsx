@@ -11,13 +11,15 @@ import {
   Switch,
   Tooltip,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, WarningOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, WarningOutlined, CheckOutlined, StopOutlined } from '@ant-design/icons';
 import {
   getIncome,
   createIncome,
   updateIncome,
   deleteIncome,
   toggleIncome,
+  bulkToggleIncome,
+  bulkDeleteIncome,
   getTaxConfig,
 } from '../api/client';
 import { IncomeEntry, IncomeCreate, TaxConfig } from '../types';
@@ -60,6 +62,7 @@ const IncomePage: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [taxConfig, setTaxConfig] = useState<TaxConfig | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   const whtRate = taxConfig?.wht_rate_resident ?? 0;
 
@@ -160,6 +163,30 @@ const IncomePage: React.FC = () => {
       return handleUpdate(values);
     }
     return handleCreate(values);
+  };
+
+  const handleBulkToggle = async (active: boolean) => {
+    if (selectedRowKeys.length === 0) return;
+    try {
+      const result = await bulkToggleIncome(filingId, selectedRowKeys as string[], active);
+      message.success(`${result.updated} entries ${active ? 'enabled' : 'disabled'}`);
+      setSelectedRowKeys([]);
+      await fetchEntries();
+    } catch {
+      message.error('Failed to update entries');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRowKeys.length === 0) return;
+    try {
+      const result = await bulkDeleteIncome(filingId, selectedRowKeys as string[]);
+      message.success(`${result.deleted} entries deleted`);
+      setSelectedRowKeys([]);
+      await fetchEntries();
+    } catch {
+      message.error('Failed to delete entries');
+    }
   };
 
   const columns: ColumnsType<IncomeEntry> = [
@@ -322,6 +349,53 @@ const IncomePage: React.FC = () => {
         />
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectedRowKeys.length > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 20px',
+            background: '#e6f7ff',
+            borderBottom: '1px solid #91d5ff',
+          }}
+        >
+          <span style={{ fontWeight: 500, color: '#1890ff', marginRight: 4 }}>
+            {selectedRowKeys.length} selected
+          </span>
+          <Button
+            size="small"
+            icon={<CheckOutlined />}
+            onClick={() => handleBulkToggle(true)}
+            style={{ borderRadius: 6 }}
+          >
+            Enable
+          </Button>
+          <Button
+            size="small"
+            icon={<StopOutlined />}
+            onClick={() => handleBulkToggle(false)}
+            style={{ borderRadius: 6 }}
+          >
+            Disable
+          </Button>
+          <Popconfirm
+            title={`Delete ${selectedRowKeys.length} entries?`}
+            onConfirm={handleBulkDelete}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button size="small" danger icon={<DeleteOutlined />} style={{ borderRadius: 6 }}>
+              Delete
+            </Button>
+          </Popconfirm>
+          <Button size="small" type="link" onClick={() => setSelectedRowKeys([])}>
+            Clear selection
+          </Button>
+        </div>
+      )}
+
       <div style={{ padding: '0 20px 20px' }}>
         <Spin spinning={loading}>
           <Table
@@ -329,7 +403,16 @@ const IncomePage: React.FC = () => {
             dataSource={filteredEntries}
             columns={columns}
             rowKey="id"
-            pagination={{ pageSize: 10 }}
+            rowSelection={{
+              selectedRowKeys,
+              onChange: (keys) => setSelectedRowKeys(keys),
+            }}
+            pagination={{
+              defaultPageSize: 20,
+              pageSizeOptions: ['10', '20', '50', '100'],
+              showSizeChanger: true,
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+            }}
             scroll={{ x: 800 }}
             rowClassName={(record) => {
               const classes = ['filing-row'];
@@ -342,13 +425,13 @@ const IncomePage: React.FC = () => {
             summary={() => (
               <Table.Summary fixed>
                 <Table.Summary.Row style={{ background: '#fafafa' }}>
-                  <Table.Summary.Cell index={0} colSpan={3}>
+                  <Table.Summary.Cell index={0} colSpan={4}>
                     <strong>Total</strong>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={3} align="right">
+                  <Table.Summary.Cell index={4} align="right">
                     <strong style={monoStyle}>{formatLKR(totalAmount)}</strong>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={4} colSpan={3} />
+                  <Table.Summary.Cell index={5} colSpan={4} />
                 </Table.Summary.Row>
               </Table.Summary>
             )}

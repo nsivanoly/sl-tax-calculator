@@ -134,6 +134,29 @@ export async function toggleIncome(filingId: string, incomeId: string): Promise<
   return response.data;
 }
 
+export async function bulkToggleIncome(
+  filingId: string,
+  ids: string[],
+  active: boolean
+): Promise<{ updated: number }> {
+  const response = await apiClient.post<{ updated: number }>(
+    `/filings/${filingId}/income/bulk-toggle`,
+    { ids, active }
+  );
+  return response.data;
+}
+
+export async function bulkDeleteIncome(
+  filingId: string,
+  ids: string[]
+): Promise<{ deleted: number }> {
+  const response = await apiClient.post<{ deleted: number }>(
+    `/filings/${filingId}/income/bulk-delete`,
+    { ids }
+  );
+  return response.data;
+}
+
 export async function uploadCsv(
   filingId: string,
   file: File

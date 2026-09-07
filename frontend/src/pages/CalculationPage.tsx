@@ -290,70 +290,82 @@ const CalculationPage: React.FC = () => {
 
         {breakdown && (() => {
           const hasForeign = breakdown.gross_income.foreign_employment > 0;
-          // Section numbers shift when foreign section is hidden
-          const s = { gross: 1, domestic: 2, foreign: 3, grossTax: hasForeign ? 4 : 3, credits: hasForeign ? 5 : 4, net: hasForeign ? 6 : 5, effective: hasForeign ? 7 : 6 };
+          const hasDomestic = (breakdown.gross_income.salary + breakdown.gross_income.interest + breakdown.gross_income.other) > 0;
+          // Section numbers shift when domestic/foreign sections are hidden
+          let n = 1;
+          const s = {
+            gross: n++,
+            domestic: hasDomestic ? n++ : 0,
+            foreign: hasForeign ? n++ : 0,
+            grossTax: n++,
+            credits: n++,
+            net: n++,
+            effective: n++,
+          };
           return <>
             {/* Section 1: Gross Income */}
             <SectionCard title={`${s.gross}. Gross Income`} accentColor="#1890ff">
-              <InfoRow label="Salary" value={formatLKR(breakdown.gross_income.salary)} />
-              <InfoRow label="Interest" value={formatLKR(breakdown.gross_income.interest)} />
+              {hasDomestic && <InfoRow label="Salary" value={formatLKR(breakdown.gross_income.salary)} />}
+              {hasDomestic && <InfoRow label="Interest" value={formatLKR(breakdown.gross_income.interest)} />}
               {hasForeign && <InfoRow label="Foreign Currency Income" value={formatLKR(breakdown.gross_income.foreign_employment)} />}
-              <InfoRow label="Other" value={formatLKR(breakdown.gross_income.other)} />
+              {hasDomestic && <InfoRow label="Other" value={formatLKR(breakdown.gross_income.other)} />}
               <div style={{ marginTop: 8 }}>
                 <InfoRow label="Total Gross Income" value={formatLKR(breakdown.gross_income.total)} strong summary />
               </div>
             </SectionCard>
 
-            {/* Section 2: Domestic Income Tax */}
-            <SectionCard
-              accentColor="#1a7a3a"
-              title={
-                <>
-                  {s.domestic}. Domestic Income Tax
-                  {breakdown.relief_applied_to === 'local'
-                    ? <Tag color="green" style={{ borderRadius: 12, border: 'none' }}>Progressive Slabs (with {(breakdown.tax_free_allowance / 1000000).toFixed(1)}M Relief)</Tag>
-                    : <Tag color="red" style={{ borderRadius: 12, border: 'none' }}>Flat {((breakdown.domestic_tax.slab_breakdown[breakdown.domestic_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%</Tag>
-                  }
-                </>
-              }
-            >
-              <InfoRow label="Salary" value={formatLKR(breakdown.gross_income.salary)} />
-              <InfoRow label="Interest" value={formatLKR(breakdown.gross_income.interest)} />
-              {breakdown.exemptions.interest_exempt_amount > 0 && (
-                <InfoRow
-                  label="Less: Interest Exemption"
-                  value={`− ${formatLKR(breakdown.exemptions.interest_exempt_amount)}`}
-                  danger
-                />
-              )}
-              <InfoRow label="Other" value={formatLKR(breakdown.gross_income.other)} />
-              <div style={{ marginTop: 8, marginBottom: 16 }}>
-                <InfoRow label="Total Domestic Income" value={formatLKR(breakdown.domestic_tax.domestic_income)} strong summary />
-              </div>
-
-              <Table
-                dataSource={breakdown.domestic_tax.slab_breakdown.map((s, i) => ({ ...s, key: i }))}
-                columns={slabColumns}
-                pagination={false}
-                size="small"
-                summary={() => (
-                  <Table.Summary>
-                    <Table.Summary.Row style={{ background: '#fafafa' }}>
-                      <Table.Summary.Cell index={0}><strong>Domestic Tax</strong></Table.Summary.Cell>
-                      <Table.Summary.Cell index={1} align="right">
-                        <strong style={monoStyle}>{formatLKR(breakdown.domestic_tax.domestic_income)}</strong>
-                      </Table.Summary.Cell>
-                      <Table.Summary.Cell index={2} />
-                      <Table.Summary.Cell index={3} align="right">
-                        <strong style={monoStyle}>{formatLKR(breakdown.domestic_tax.tax)}</strong>
-                      </Table.Summary.Cell>
-                    </Table.Summary.Row>
-                  </Table.Summary>
+            {/* Section 2: Domestic Income Tax — hide when only foreign income */}
+            {hasDomestic && (
+              <SectionCard
+                accentColor="#1a7a3a"
+                title={
+                  <>
+                    {s.domestic}. Domestic Income Tax
+                    {breakdown.relief_applied_to === 'local'
+                      ? <Tag color="green" style={{ borderRadius: 12, border: 'none' }}>Progressive Slabs (with {(breakdown.tax_free_allowance / 1000000).toFixed(1)}M Relief)</Tag>
+                      : <Tag color="red" style={{ borderRadius: 12, border: 'none' }}>Flat {((breakdown.domestic_tax.slab_breakdown[breakdown.domestic_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%</Tag>
+                    }
+                  </>
+                }
+              >
+                <InfoRow label="Salary" value={formatLKR(breakdown.gross_income.salary)} />
+                <InfoRow label="Interest" value={formatLKR(breakdown.gross_income.interest)} />
+                {breakdown.exemptions.interest_exempt_amount > 0 && (
+                  <InfoRow
+                    label="Less: Interest Exemption"
+                    value={`− ${formatLKR(breakdown.exemptions.interest_exempt_amount)}`}
+                    danger
+                  />
                 )}
-              />
+                <InfoRow label="Other" value={formatLKR(breakdown.gross_income.other)} />
+                <div style={{ marginTop: 8, marginBottom: 16 }}>
+                  <InfoRow label="Total Domestic Income" value={formatLKR(breakdown.domestic_tax.domestic_income)} strong summary />
+                </div>
 
-              {renderSlabChart(breakdown.domestic_tax.slab_breakdown, 'Domestic Slab Visualization')}
-            </SectionCard>
+                <Table
+                  dataSource={breakdown.domestic_tax.slab_breakdown.map((s, i) => ({ ...s, key: i }))}
+                  columns={slabColumns}
+                  pagination={false}
+                  size="small"
+                  summary={() => (
+                    <Table.Summary>
+                      <Table.Summary.Row style={{ background: '#fafafa' }}>
+                        <Table.Summary.Cell index={0}><strong>Domestic Tax</strong></Table.Summary.Cell>
+                        <Table.Summary.Cell index={1} align="right">
+                          <strong style={monoStyle}>{formatLKR(breakdown.domestic_tax.domestic_income)}</strong>
+                        </Table.Summary.Cell>
+                        <Table.Summary.Cell index={2} />
+                        <Table.Summary.Cell index={3} align="right">
+                          <strong style={monoStyle}>{formatLKR(breakdown.domestic_tax.tax)}</strong>
+                        </Table.Summary.Cell>
+                      </Table.Summary.Row>
+                    </Table.Summary>
+                  )}
+                />
+
+                {renderSlabChart(breakdown.domestic_tax.slab_breakdown, 'Domestic Slab Visualization')}
+              </SectionCard>
+            )}
 
             {/* Section 3: Foreign Income Tax — only show when there IS foreign income */}
             {hasForeign && (
@@ -400,7 +412,7 @@ const CalculationPage: React.FC = () => {
 
             {/* Section 4: Gross Tax */}
             <SectionCard title={`${s.grossTax}. Gross Tax`} accentColor="#fa8c16">
-              <InfoRow label="Domestic Tax" value={formatLKR(breakdown.domestic_tax.tax)} />
+              {hasDomestic && <InfoRow label="Domestic Tax" value={formatLKR(breakdown.domestic_tax.tax)} />}
               {hasForeign && (
                 <InfoRow label="Foreign Tax" value={formatLKR(breakdown.foreign_tax.tax)} />
               )}

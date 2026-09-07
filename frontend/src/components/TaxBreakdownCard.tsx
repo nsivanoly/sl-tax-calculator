@@ -44,20 +44,21 @@ const slabColumns: ColumnsType<SlabDetail> = [
 const TaxBreakdownCard: React.FC<TaxBreakdownCardProps> = ({ breakdown, title }) => {
   const { gross_income, exemptions, credits, domestic_tax, foreign_tax, net_tax_payable } = breakdown;
   const hasForeign = gross_income.foreign_employment > 0;
+  const hasDomestic = (gross_income.salary + gross_income.interest + gross_income.other) > 0;
 
   const netColor = net_tax_payable > 0 ? '#cf1322' : '#3f8600';
 
   return (
     <Card title={title} bordered>
       <Descriptions title="Gross Income" bordered column={2} size="small" style={{ marginBottom: 24 }}>
-        <Descriptions.Item label="Salary">{formatLKR(gross_income.salary)}</Descriptions.Item>
-        <Descriptions.Item label="Interest">{formatLKR(gross_income.interest)}</Descriptions.Item>
+        {hasDomestic && <Descriptions.Item label="Salary">{formatLKR(gross_income.salary)}</Descriptions.Item>}
+        {hasDomestic && <Descriptions.Item label="Interest">{formatLKR(gross_income.interest)}</Descriptions.Item>}
         {hasForeign && (
           <Descriptions.Item label="Foreign Currency Income">
             {formatLKR(gross_income.foreign_employment)}
           </Descriptions.Item>
         )}
-        <Descriptions.Item label="Other">{formatLKR(gross_income.other)}</Descriptions.Item>
+        {hasDomestic && <Descriptions.Item label="Other">{formatLKR(gross_income.other)}</Descriptions.Item>}
         <Descriptions.Item label="Total" span={2}>
           <Text strong>{formatLKR(gross_income.total)}</Text>
         </Descriptions.Item>
@@ -78,7 +79,7 @@ const TaxBreakdownCard: React.FC<TaxBreakdownCardProps> = ({ breakdown, title })
         size="small"
         style={{ marginBottom: 24 }}
       >
-        {hasForeign && (
+        {hasForeign && hasDomestic && (
           <Descriptions.Item label="Relief Applied To">
             <Tag color={breakdown.relief_applied_to === 'local' ? 'green' : 'blue'}>
               {breakdown.relief_applied_to === 'local' ? 'Local Income' : 'Foreign Income'}
@@ -90,50 +91,54 @@ const TaxBreakdownCard: React.FC<TaxBreakdownCardProps> = ({ breakdown, title })
         </Descriptions.Item>
       </Descriptions>
 
-      <Title level={5}>
-        Domestic Tax{' '}
-        {breakdown.relief_applied_to === 'local'
-          ? <Tag color="green">Progressive Slabs (with 1.8M Relief)</Tag>
-          : <Tag color="red">Flat 36%</Tag>
-        }
-      </Title>
-      <Descriptions bordered column={1} size="small" style={{ marginBottom: 12 }}>
-        <Descriptions.Item label="Salary">{formatLKR(gross_income.salary)}</Descriptions.Item>
-        <Descriptions.Item label="Interest">{formatLKR(gross_income.interest)}</Descriptions.Item>
-        {exemptions.interest_exempt_amount > 0 && (
-          <Descriptions.Item label="Less: Interest Exemption">
-            <Text type="danger">− {formatLKR(exemptions.interest_exempt_amount)}</Text>
-          </Descriptions.Item>
-        )}
-        <Descriptions.Item label="Other">{formatLKR(gross_income.other)}</Descriptions.Item>
-        <Descriptions.Item label="Total Domestic Income">
-          <Text strong>{formatLKR(domestic_tax.domestic_income)}</Text>
-        </Descriptions.Item>
-      </Descriptions>
-      <Table<SlabDetail>
-        dataSource={domestic_tax.slab_breakdown}
-        columns={slabColumns}
-        rowKey="label"
-        pagination={false}
-        size="small"
-        style={{ marginBottom: 24 }}
-        summary={() => (
-          <Table.Summary.Row>
-            <Table.Summary.Cell index={0}>
-              <Text strong>Domestic Tax</Text>
-            </Table.Summary.Cell>
-            <Table.Summary.Cell index={1} align="right">
+      {hasDomestic && (
+        <>
+          <Title level={5}>
+            Domestic Tax{' '}
+            {breakdown.relief_applied_to === 'local'
+              ? <Tag color="green">Progressive Slabs (with 1.8M Relief)</Tag>
+              : <Tag color="red">Flat 36%</Tag>
+            }
+          </Title>
+          <Descriptions bordered column={1} size="small" style={{ marginBottom: 12 }}>
+            <Descriptions.Item label="Salary">{formatLKR(gross_income.salary)}</Descriptions.Item>
+            <Descriptions.Item label="Interest">{formatLKR(gross_income.interest)}</Descriptions.Item>
+            {exemptions.interest_exempt_amount > 0 && (
+              <Descriptions.Item label="Less: Interest Exemption">
+                <Text type="danger">− {formatLKR(exemptions.interest_exempt_amount)}</Text>
+              </Descriptions.Item>
+            )}
+            <Descriptions.Item label="Other">{formatLKR(gross_income.other)}</Descriptions.Item>
+            <Descriptions.Item label="Total Domestic Income">
               <Text strong>{formatLKR(domestic_tax.domestic_income)}</Text>
-            </Table.Summary.Cell>
-            <Table.Summary.Cell index={2} align="right">
-              —
-            </Table.Summary.Cell>
-            <Table.Summary.Cell index={3} align="right">
-              <Text strong>{formatLKR(domestic_tax.tax)}</Text>
-            </Table.Summary.Cell>
-          </Table.Summary.Row>
-        )}
-      />
+            </Descriptions.Item>
+          </Descriptions>
+          <Table<SlabDetail>
+            dataSource={domestic_tax.slab_breakdown}
+            columns={slabColumns}
+            rowKey="label"
+            pagination={false}
+            size="small"
+            style={{ marginBottom: 24 }}
+            summary={() => (
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0}>
+                  <Text strong>Domestic Tax</Text>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={1} align="right">
+                  <Text strong>{formatLKR(domestic_tax.domestic_income)}</Text>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={2} align="right">
+                  —
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={3} align="right">
+                  <Text strong>{formatLKR(domestic_tax.tax)}</Text>
+                </Table.Summary.Cell>
+              </Table.Summary.Row>
+            )}
+          />
+        </>
+      )}
 
       {hasForeign && (
         <>
@@ -177,9 +182,11 @@ const TaxBreakdownCard: React.FC<TaxBreakdownCardProps> = ({ breakdown, title })
       )}
 
       <Descriptions title="Tax Summary" bordered column={2} size="small" style={{ marginBottom: 24 }}>
-        <Descriptions.Item label="Domestic Tax">
-          {formatLKR(domestic_tax.tax)}
-        </Descriptions.Item>
+        {hasDomestic && (
+          <Descriptions.Item label="Domestic Tax">
+            {formatLKR(domestic_tax.tax)}
+          </Descriptions.Item>
+        )}
         {hasForeign && (
           <Descriptions.Item label="Foreign Tax">
             {formatLKR(foreign_tax.tax)}

@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -200,3 +200,48 @@ async def bulk_upload_csv(
         "created": created_count,
         "errors": [{"row": row, "message": msg} for row, msg in errors],
     }
+
+
+@router.post("/bulk-toggle")
+async def bulk_toggle_income(
+    filing_id: str,
+    ids: list[str] = Body(..., embed=True),
+    active: bool = Body(..., embed=True),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set is_active for multiple entries at once."""
+    fid = uuid.UUID(filing_id)
+    uuids = [uuid.UUID(i) for i in ids]
+    stmt = select(IncomeEntry).where(
+        IncomeEntry.filing_id == fid,
+        IncomeEntry.id.in_(uuids),
+    )
+    result = await db.execute(stmt)
+    entries = list(result.scalars().all())
+    for entry in entries:
+        entry.is_active = active
+    await db.flush()
+    await _mark_draft(db, filing_id)
+    return {"updated": len(entries)}
+
+
+@router.post("/bulk-delete")
+async def bulk_delete_income(
+    filing_id: str,
+    ids: list[str] = Body(..., embed=True),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete multiple entries at once."""
+    fid = uuid.UUID(filing_id)
+    uuids = [uuid.UUID(i) for i in ids]
+    stmt = select(IncomeEntry).where(
+        IncomeEntry.filing_id == fid,
+        IncomeEntry.id.in_(uuids),
+    )
+    result = await db.execute(stmt)
+    entries = list(result.scalars().all())
+    for entry in entries:
+        await db.delete(entry)
+    await db.flush()
+    await _mark_draft(db, filing_id)
+    return {"deleted": len(entries)}

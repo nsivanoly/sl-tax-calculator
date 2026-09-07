@@ -162,6 +162,7 @@ const DashboardPage: React.FC = () => {
   const savings = optimized.tax_savings;
   const recommended = optimized.recommended_relief_on;
   const hasForeign = best.gross_income.foreign_employment > 0;
+  const hasDomestic = (best.gross_income.salary + best.gross_income.interest + best.gross_income.other) > 0;
 
   // Waterfall data for the optimized breakdown
   const waterfallSteps = [
@@ -172,7 +173,8 @@ const DashboardPage: React.FC = () => {
       icon: <WalletOutlined />,
       desc: 'Total from all sources',
     },
-    {
+    // Interest exemption is irrelevant when there's no domestic income
+    ...(hasDomestic ? [{
       title: 'Interest Exemption',
       value: -best.exemptions.interest_exempt_amount,
       color: '#52c41a',
@@ -180,7 +182,7 @@ const DashboardPage: React.FC = () => {
       desc: best.exemptions.interest_exempt_amount > 0
         ? `${formatLKR(best.exemptions.interest_exempt_amount)} exempted`
         : 'No interest exempted',
-    },
+    }] : []),
     {
       title: 'Tax-Free Relief',
       value: -best.tax_free_allowance,
@@ -193,7 +195,7 @@ const DashboardPage: React.FC = () => {
       value: best.gross_tax,
       color: '#fa8c16',
       icon: <BankOutlined />,
-      desc: hasForeign ? `Domestic ${formatLKR(best.domestic_tax.tax)} + Foreign ${formatLKR(best.foreign_tax.tax)}` : `From progressive slabs`,
+      desc: hasForeign && hasDomestic ? `Domestic ${formatLKR(best.domestic_tax.tax)} + Foreign ${formatLKR(best.foreign_tax.tax)}` : `From progressive slabs`,
     },
     {
       title: 'Tax Credits',
@@ -218,7 +220,8 @@ const DashboardPage: React.FC = () => {
     { name: 'Other', value: summary.other_total },
   ].filter((d) => d.value > 0);
 
-  const domesticBarData = best.domestic_tax.slab_breakdown.map((slab) => ({
+  const slabSource = hasDomestic ? best.domestic_tax.slab_breakdown : best.foreign_tax.slab_breakdown;
+  const domesticBarData = slabSource.map((slab) => ({
     name: slab.label,
     taxable: slab.taxable_in_slab,
     tax: slab.tax,
@@ -739,7 +742,7 @@ const DashboardPage: React.FC = () => {
       {/* ====== SLAB VISUALIZATION ====== */}
       <div style={{ ...container, marginBottom: 16 }}>
         <SectionHeader icon={<BankOutlined />}>
-          Tax Slab Breakdown — {!hasForeign || recommended === 'local' ? 'Progressive Slabs' : 'Progressive Brackets (Foreign)'}
+          Tax Slab Breakdown — {!hasDomestic ? 'Foreign Brackets' : (!hasForeign || recommended === 'local') ? 'Progressive Slabs' : 'Progressive Brackets (Foreign)'}
         </SectionHeader>
         <div style={{ padding: '16px 20px' }}>
           <ResponsiveContainer width="100%" height={Math.max(200, domesticBarData.length * 55)}>

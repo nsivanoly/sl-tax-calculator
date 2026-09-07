@@ -101,6 +101,7 @@ const OptimizerPage: React.FC = () => {
 
   const bestResult = recommendedReliefOn === 'local' ? localResult : foreignResult;
   const hasForeign = (localResult?.gross_income.foreign_employment ?? 0) > 0;
+  const hasDomestic = ((localResult?.gross_income.salary ?? 0) + (localResult?.gross_income.interest ?? 0) + (localResult?.gross_income.other ?? 0)) > 0;
 
   const renderComparisonCard = (
     result: TaxBreakdown,
@@ -149,17 +150,21 @@ const OptimizerPage: React.FC = () => {
         <span style={{ fontWeight: 600, fontSize: 15, color: '#1a1a2e' }}>{title}</span>
       </div>
       <div style={{ padding: '8px 20px 20px' }}>
-        <MetricRow label="Domestic Income" value={formatLKR(result.domestic_tax.domestic_income)} />
-        <MetricRow label="Domestic Tax" value={formatLKR(result.domestic_tax.tax)} />
-        <div style={{ padding: '9px 0', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#595959' }}>Domestic Method</span>
-          <Tag
-            color={result.relief_applied_to === 'local' ? 'green' : 'red'}
-            style={{ borderRadius: 12, border: 'none', margin: 0 }}
-          >
-            {result.relief_applied_to === 'local' ? `Progressive Slabs (${(result.tax_free_allowance / 1000000).toFixed(1)}M Relief)` : `Flat ${((result.domestic_tax.slab_breakdown[result.domestic_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%`}
-          </Tag>
-        </div>
+        {hasDomestic && (
+          <>
+            <MetricRow label="Domestic Income" value={formatLKR(result.domestic_tax.domestic_income)} />
+            <MetricRow label="Domestic Tax" value={formatLKR(result.domestic_tax.tax)} />
+            <div style={{ padding: '9px 0', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#595959' }}>Domestic Method</span>
+              <Tag
+                color={result.relief_applied_to === 'local' ? 'green' : 'red'}
+                style={{ borderRadius: 12, border: 'none', margin: 0 }}
+              >
+                {result.relief_applied_to === 'local' ? `Progressive Slabs (${(result.tax_free_allowance / 1000000).toFixed(1)}M Relief)` : `Flat ${((result.domestic_tax.slab_breakdown[result.domestic_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%`}
+              </Tag>
+            </div>
+          </>
+        )}
         {hasForeign && (
           <>
             <MetricRow label="Foreign Income" value={formatLKR(result.foreign_tax.foreign_income)} />
@@ -256,8 +261,8 @@ const OptimizerPage: React.FC = () => {
           </div>
         )}
 
-        {/* Two-column comparison — only when there IS foreign income */}
-        {hasForeign ? (
+        {/* Two-column comparison — only when there is BOTH domestic and foreign income */}
+        {hasForeign && hasDomestic ? (
           <Row gutter={[24, 24]}>
             {localResult && (
               <Col xs={24} md={12}>
@@ -281,14 +286,23 @@ const OptimizerPage: React.FC = () => {
               </Col>
             )}
           </Row>
-        ) : localResult && (
+        ) : (
           <Row gutter={[24, 24]}>
             <Col xs={24} md={16}>
-              {renderComparisonCard(
-                localResult,
-                '🏠',
-                'Tax Breakdown (Local Income Only)',
-                true
+              {hasDomestic && localResult ? (
+                renderComparisonCard(
+                  localResult,
+                  '🏠',
+                  'Tax Breakdown (Local Income Only)',
+                  true
+                )
+              ) : foreignResult && (
+                renderComparisonCard(
+                  foreignResult,
+                  '🌍',
+                  'Tax Breakdown (Foreign Income Only)',
+                  true
+                )
               )}
             </Col>
           </Row>
