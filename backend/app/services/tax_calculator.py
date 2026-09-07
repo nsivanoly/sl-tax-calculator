@@ -280,6 +280,13 @@ async def calculate_tax(
     # Split domestic vs foreign
     domestic_income = salary_total + (interest_total - exempt_amount) + other_total
 
+    # Auto-correct relief when only one income type exists:
+    # Applying relief to an empty bucket wastes the tax-free allowance.
+    if domestic_income <= ZERO and foreign_total > ZERO:
+        relief_on = "foreign"
+    elif foreign_total <= ZERO and domestic_income > ZERO:
+        relief_on = "local"
+
     if relief_on == "local":
         # Domestic income gets progressive slabs (relief is built into the first slab)
         domestic_slab_breakdown, domestic_tax_amount = _apply_slabs(domestic_income, local_slabs)

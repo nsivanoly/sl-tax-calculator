@@ -127,6 +127,11 @@ const CalculationPage: React.FC = () => {
     try {
       const data = await calculateTax(filingId, undefined, relief || reliefOn);
       setBreakdown(data);
+      // Sync local state with what the backend actually used
+      // (backend auto-corrects relief when only one income type exists)
+      if (data.relief_applied_to && data.relief_applied_to !== reliefOn) {
+        setReliefOn(data.relief_applied_to);
+      }
     } catch (error) {
       message.error('Failed to calculate tax');
     } finally {
