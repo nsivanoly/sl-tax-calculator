@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
-import { Modal, Form, Select, Input, InputNumber, DatePicker } from 'antd';
+import { Modal, Form, Select, Input, InputNumber, DatePicker, Alert } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import type { IncomeCreate } from '../types';
 
 const { TextArea } = Input;
+
+const formatLKR = (v: number) => 'LKR ' + new Intl.NumberFormat('en-US').format(Math.round(v));
 
 interface IncomeFormProps {
   open: boolean;
@@ -11,6 +13,7 @@ interface IncomeFormProps {
   onSubmit: (values: IncomeCreate) => Promise<void>;
   initialValues?: Partial<IncomeCreate>;
   loading?: boolean;
+  whtRate?: number; // e.g. 0.10 for 10%
 }
 
 const CATEGORY_OPTIONS = [
@@ -45,9 +48,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   onSubmit,
   initialValues,
   loading,
+  whtRate = 0,
 }) => {
   const [form] = Form.useForm<IncomeFormValues>();
   const category = Form.useWatch('category', form);
+  const amountLkr = Form.useWatch('amount_lkr', form);
+  const whtDeducted = Form.useWatch('wht_deducted', form);
 
   const isEdit = !!initialValues && Object.keys(initialValues).length > 0;
 
@@ -171,6 +177,33 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             ) : null
           }
         </Form.Item>
+
+        {/* WHT validation hint for interest entries */}
+        {category === 'interest' && whtRate > 0 && amountLkr > 0 && (() => {
+          const expected = amountLkr * whtRate;
+          const actual = whtDeducted ?? 0;
+          const diff = Math.abs(actual - expected);
+          if (diff <= 1) return null;
+          const ratePct = (whtRate * 100).toFixed(0);
+          if (actual < expected) {
+            return (
+              <Alert
+                type="warning"
+                showIcon
+                style={{ marginBottom: 16, borderRadius: 8 }}
+                message={`WHT appears under-deducted: ${formatLKR(actual)} vs expected ${formatLKR(expected)} (${ratePct}%)`}
+              />
+            );
+          }
+          return (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16, borderRadius: 8 }}
+              message={`WHT appears over-deducted: ${formatLKR(actual)} vs expected ${formatLKR(expected)} (${ratePct}%). Excess will be credited.`}
+            />
+          );
+        })()}
 
         {/* PAYE — shown only for salary */}
         <Form.Item noStyle shouldUpdate={(prev, curr) => prev.category !== curr.category}>

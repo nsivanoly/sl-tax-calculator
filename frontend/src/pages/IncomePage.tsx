@@ -11,15 +11,16 @@ import {
   Switch,
   Tooltip,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, WarningOutlined } from '@ant-design/icons';
 import {
   getIncome,
   createIncome,
   updateIncome,
   deleteIncome,
   toggleIncome,
+  getTaxConfig,
 } from '../api/client';
-import { IncomeEntry, IncomeCreate } from '../types';
+import { IncomeEntry, IncomeCreate, TaxConfig } from '../types';
 import { useFilingContext } from '../context/AuthContext';
 import IncomeForm from '../components/IncomeForm';
 import type { ColumnsType } from 'antd/es/table';
@@ -58,12 +59,30 @@ const IncomePage: React.FC = () => {
   const [editingEntry, setEditingEntry] = useState<IncomeEntry | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('all');
+  const [taxConfig, setTaxConfig] = useState<TaxConfig | null>(null);
+
+  const whtRate = taxConfig?.wht_rate_resident ?? 0;
+
+  const getWhtWarning = (entry: IncomeEntry): string | null => {
+    if (entry.category !== 'interest' || whtRate <= 0 || entry.amount_lkr <= 0) return null;
+    const expected = entry.amount_lkr * whtRate;
+    const diff = Math.abs(entry.wht_deducted - expected);
+    if (diff <= 1) return null; // rounding tolerance
+    if (entry.wht_deducted < expected) {
+      return `Under-deducted: ${formatLKR(entry.wht_deducted)} vs expected ${formatLKR(expected)} (${(whtRate * 100).toFixed(0)}%)`;
+    }
+    return `Over-deducted: ${formatLKR(entry.wht_deducted)} vs expected ${formatLKR(expected)} (${(whtRate * 100).toFixed(0)}%)`;
+  };
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getIncome(filingId);
+      const [data, config] = await Promise.all([
+        getIncome(filingId),
+        getTaxConfig(currentFiling!.fiscal_year),
+      ]);
       setEntries(data);
+      setTaxConfig(config);
     } catch (error) {
       message.error('Failed to load income entries');
     } finally {
@@ -175,7 +194,19 @@ const IncomePage: React.FC = () => {
       dataIndex: 'wht_deducted',
       key: 'wht_deducted',
       align: 'right',
-      render: (value: number) => <span style={monoStyle}>{formatLKR(value)}</span>,
+      render: (value: number, record: IncomeEntry) => {
+        const warning = getWhtWarning(record);
+        return (
+          <span style={monoStyle}>
+            {formatLKR(value)}
+            {warning && (
+              <Tooltip title={warning}>
+                <WarningOutlined style={{ color: '#faad14', marginLeft: 6, fontSize: 13 }} />
+              </Tooltip>
+            )}
+          </span>
+        );
+      },
     },
     {
       title: 'Date',
@@ -317,6 +348,7 @@ const IncomePage: React.FC = () => {
           setEditingEntry(null);
         }}
         onSubmit={handleSubmit}
+        whtRate={whtRate}
         initialValues={
           editingEntry
             ? {

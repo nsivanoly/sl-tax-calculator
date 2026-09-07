@@ -20,7 +20,7 @@ import {
   SettingOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
-import { getTaxConfig, updateSlabs, getFiscalYears, copyTaxConfig } from '../api/client';
+import { getTaxConfig, updateTaxConfig, updateSlabs, getFiscalYears, copyTaxConfig } from '../api/client';
 import type { TaxConfig, TaxSlab, FiscalYearEntry } from '../types';
 
 const TaxConfigPage: React.FC = () => {
@@ -357,6 +357,79 @@ const TaxConfigPage: React.FC = () => {
                 style={{ marginBottom: 16, borderRadius: 12 }}
               />
             )}
+
+            {/* Tax Parameters */}
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: 12,
+                border: '1px solid #f0f0f0',
+                padding: '18px 20px',
+                marginBottom: 20,
+              }}
+            >
+              <div style={{ fontWeight: 600, fontSize: 14, color: '#1a1a2e', marginBottom: 16 }}>
+                Tax Parameters
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+                <div style={{ flex: '1 1 200px', minWidth: 180 }}>
+                  <div style={{ fontSize: 12, color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+                    Tax-Free Threshold (LKR)
+                  </div>
+                  <InputNumber<number>
+                    value={config.tax_free_threshold}
+                    min={0}
+                    formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(v) => Number(v!.replace(/,/g, ''))}
+                    onChange={async (v) => {
+                      if (v == null) return;
+                      const updated = await updateTaxConfig({ fiscal_year: config.fiscal_year, tax_free_threshold: v });
+                      setConfig(updated);
+                      message.success('Tax-free threshold updated');
+                    }}
+                    style={{ width: '100%', borderRadius: 8, fontFamily: "'JetBrains Mono', monospace" }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 200px', minWidth: 180 }}>
+                  <div style={{ fontSize: 12, color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+                    Interest Exemption Limit (LKR)
+                  </div>
+                  <InputNumber<number>
+                    value={config.interest_exemption_limit}
+                    min={0}
+                    formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(v) => Number(v!.replace(/,/g, ''))}
+                    onChange={async (v) => {
+                      if (v == null) return;
+                      const updated = await updateTaxConfig({ fiscal_year: config.fiscal_year, interest_exemption_limit: v });
+                      setConfig(updated);
+                      message.success('Interest exemption limit updated');
+                    }}
+                    style={{ width: '100%', borderRadius: 8, fontFamily: "'JetBrains Mono', monospace" }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 160px', minWidth: 140 }}>
+                  <div style={{ fontSize: 12, color: '#8c8c8c', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+                    WHT Rate on Interest (%)
+                  </div>
+                  <InputNumber<number>
+                    value={config.wht_rate_resident * 100}
+                    min={0}
+                    max={100}
+                    step={1}
+                    formatter={(v) => `${v}%`}
+                    parser={(v) => Number(v!.replace('%', ''))}
+                    onChange={async (v) => {
+                      if (v == null) return;
+                      const updated = await updateTaxConfig({ fiscal_year: config.fiscal_year, wht_rate_resident: v / 100 });
+                      setConfig(updated);
+                      message.success('WHT rate updated');
+                    }}
+                    style={{ width: '100%', borderRadius: 8, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Local / Income Slabs */}
             <div
