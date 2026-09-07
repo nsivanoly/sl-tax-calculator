@@ -161,6 +161,7 @@ const DashboardPage: React.FC = () => {
   const best = optimized.optimized;
   const savings = optimized.tax_savings;
   const recommended = optimized.recommended_relief_on;
+  const hasForeign = best.gross_income.foreign_employment > 0;
 
   // Waterfall data for the optimized breakdown
   const waterfallSteps = [
@@ -185,14 +186,14 @@ const DashboardPage: React.FC = () => {
       value: -best.tax_free_allowance,
       color: '#0891b2',
       icon: <GiftOutlined />,
-      desc: `Applied to ${recommended === 'local' ? 'local' : 'foreign'} income`,
+      desc: hasForeign ? `Applied to ${recommended === 'local' ? 'local' : 'foreign'} income` : 'Tax-free allowance',
     },
     {
       title: 'Gross Tax',
       value: best.gross_tax,
       color: '#fa8c16',
       icon: <BankOutlined />,
-      desc: `Domestic ${formatLKR(best.domestic_tax.tax)} + Foreign ${formatLKR(best.foreign_tax.tax)}`,
+      desc: hasForeign ? `Domestic ${formatLKR(best.domestic_tax.tax)} + Foreign ${formatLKR(best.foreign_tax.tax)}` : `From progressive slabs`,
     },
     {
       title: 'Tax Credits',
@@ -282,7 +283,7 @@ const DashboardPage: React.FC = () => {
             </Col>
 
             <Col xs={24} md={8}>
-              {savings > 0 ? (
+              {savings > 0 && hasForeign ? (
                 <div
                   style={{
                     background: '#f6ffed',
@@ -371,8 +372,8 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ====== RELIEF COMPARISON (only shown when FY has foreign tax) ====== */}
-      {taxConfig?.has_foreign_tax !== false && (
+      {/* ====== RELIEF COMPARISON (only shown when FY has foreign tax AND user has foreign income) ====== */}
+      {taxConfig?.has_foreign_tax !== false && hasForeign && (
       <div style={{ ...container, marginBottom: 16 }}>
         <SectionHeader icon={<SwapOutlined />}>
           Relief Comparison — Where to Apply {formatLKR(best.tax_free_allowance)}?
@@ -738,7 +739,7 @@ const DashboardPage: React.FC = () => {
       {/* ====== SLAB VISUALIZATION ====== */}
       <div style={{ ...container, marginBottom: 16 }}>
         <SectionHeader icon={<BankOutlined />}>
-          Tax Slab Breakdown — {recommended === 'local' ? 'Progressive Slabs (Local)' : 'Progressive Brackets (Foreign)'}
+          Tax Slab Breakdown — {!hasForeign || recommended === 'local' ? 'Progressive Slabs' : 'Progressive Brackets (Foreign)'}
         </SectionHeader>
         <div style={{ padding: '16px 20px' }}>
           <ResponsiveContainer width="100%" height={Math.max(200, domesticBarData.length * 55)}>

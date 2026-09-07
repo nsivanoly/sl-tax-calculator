@@ -100,6 +100,7 @@ const OptimizerPage: React.FC = () => {
   }, []);
 
   const bestResult = recommendedReliefOn === 'local' ? localResult : foreignResult;
+  const hasForeign = (localResult?.gross_income.foreign_employment ?? 0) > 0;
 
   const renderComparisonCard = (
     result: TaxBreakdown,
@@ -159,17 +160,21 @@ const OptimizerPage: React.FC = () => {
             {result.relief_applied_to === 'local' ? `Progressive Slabs (${(result.tax_free_allowance / 1000000).toFixed(1)}M Relief)` : `Flat ${((result.domestic_tax.slab_breakdown[result.domestic_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%`}
           </Tag>
         </div>
-        <MetricRow label="Foreign Income" value={formatLKR(result.foreign_tax.foreign_income)} />
-        <MetricRow label="Foreign Tax" value={formatLKR(result.foreign_tax.tax)} />
-        <div style={{ padding: '9px 0', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#595959' }}>Foreign Method</span>
-          <Tag
-            color={result.relief_applied_to === 'foreign' ? 'green' : 'red'}
-            style={{ borderRadius: 12, border: 'none', margin: 0 }}
-          >
-            {result.relief_applied_to === 'foreign' ? `Foreign Brackets (${(result.tax_free_allowance / 1000000).toFixed(1)}M Relief)` : `Flat ${((result.foreign_tax.slab_breakdown[result.foreign_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%`}
-          </Tag>
-        </div>
+        {hasForeign && (
+          <>
+            <MetricRow label="Foreign Income" value={formatLKR(result.foreign_tax.foreign_income)} />
+            <MetricRow label="Foreign Tax" value={formatLKR(result.foreign_tax.tax)} />
+            <div style={{ padding: '9px 0', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#595959' }}>Foreign Method</span>
+              <Tag
+                color={result.relief_applied_to === 'foreign' ? 'green' : 'red'}
+                style={{ borderRadius: 12, border: 'none', margin: 0 }}
+              >
+                {result.relief_applied_to === 'foreign' ? `Foreign Brackets (${(result.tax_free_allowance / 1000000).toFixed(1)}M Relief)` : `Flat ${((result.foreign_tax.slab_breakdown[result.foreign_tax.slab_breakdown.length - 1]?.rate ?? 0) * 100).toFixed(0)}%`}
+              </Tag>
+            </div>
+          </>
+        )}
         <MetricRow label="Gross Tax" value={formatLKR(result.gross_tax)} />
         <MetricRow label="Total Credits" value={formatLKR(result.credits.total_credits)} color="#1890ff" />
         <div style={{ marginTop: 8, padding: '10px 14px', background: '#fafafa', borderRadius: 8 }}>
@@ -193,8 +198,9 @@ const OptimizerPage: React.FC = () => {
           Tax Optimizer
         </Typography.Title>
         <Typography.Paragraph style={{ color: '#8c8c8c', marginTop: 4, marginBottom: 0 }}>
-          Compare applying the tax-free relief to local income vs foreign income.
-          The optimizer picks the option that minimizes your net tax payable.
+          {hasForeign
+            ? 'Compare applying the tax-free relief to local income vs foreign income. The optimizer picks the option that minimizes your net tax payable.'
+            : 'Optimize your tax calculation. The optimizer finds the best exemption strategy to minimize your net tax payable.'}
         </Typography.Paragraph>
       </div>
 
@@ -219,8 +225,8 @@ const OptimizerPage: React.FC = () => {
           </Col>
         </Row>
 
-        {/* Savings Banner */}
-        {savings > 0 && recommendedReliefOn && (
+        {/* Savings Banner — only when there IS foreign income to compare */}
+        {savings > 0 && recommendedReliefOn && hasForeign && (
           <div
             style={{
               background: '#f6ffed',
@@ -250,30 +256,43 @@ const OptimizerPage: React.FC = () => {
           </div>
         )}
 
-        {/* Two-column comparison */}
-        <Row gutter={[24, 24]}>
-          {localResult && (
-            <Col xs={24} md={12}>
+        {/* Two-column comparison — only when there IS foreign income */}
+        {hasForeign ? (
+          <Row gutter={[24, 24]}>
+            {localResult && (
+              <Col xs={24} md={12}>
+                {renderComparisonCard(
+                  localResult,
+                  '🏠',
+                  'Relief on Local Income',
+                  recommendedReliefOn === 'local'
+                )}
+              </Col>
+            )}
+
+            {foreignResult && (
+              <Col xs={24} md={12}>
+                {renderComparisonCard(
+                  foreignResult,
+                  '🌍',
+                  'Relief on Foreign Income',
+                  recommendedReliefOn === 'foreign'
+                )}
+              </Col>
+            )}
+          </Row>
+        ) : localResult && (
+          <Row gutter={[24, 24]}>
+            <Col xs={24} md={16}>
               {renderComparisonCard(
                 localResult,
                 '🏠',
-                'Relief on Local Income',
-                recommendedReliefOn === 'local'
+                'Tax Breakdown (Local Income Only)',
+                true
               )}
             </Col>
-          )}
-
-          {foreignResult && (
-            <Col xs={24} md={12}>
-              {renderComparisonCard(
-                foreignResult,
-                '🌍',
-                'Relief on Foreign Income',
-                recommendedReliefOn === 'foreign'
-              )}
-            </Col>
-          )}
-        </Row>
+          </Row>
+        )}
 
         {/* Detailed Best Breakdown */}
         {bestResult && (
@@ -294,7 +313,7 @@ const OptimizerPage: React.FC = () => {
             </div>
             <TaxBreakdownCard
               breakdown={bestResult}
-              title={`Recommended: Relief on ${recommendedReliefOn === 'local' ? 'Local' : 'Foreign'} Income`}
+              title={hasForeign ? `Recommended: Relief on ${recommendedReliefOn === 'local' ? 'Local' : 'Foreign'} Income` : 'Optimized Tax Breakdown'}
             />
           </div>
         )}
