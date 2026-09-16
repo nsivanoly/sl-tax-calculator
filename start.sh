@@ -160,7 +160,7 @@ echo "╔═══════════════════════�
 echo "║  ✔  SL Tax Calculator is ready                              ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 echo "║                                                              ║"
-echo "║  🌐 Frontend       http://localhost:3100                     ║"
+echo "║  🌐 Frontend       http://localhost:3200                     ║"
 echo "║  🔌 Backend API    http://localhost:8100                     ║"
 echo "║  📚 API Docs       http://localhost:8100/docs                ║"
 echo "║  🐘 PostgreSQL     localhost:5433                            ║"

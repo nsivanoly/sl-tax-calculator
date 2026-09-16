@@ -85,15 +85,24 @@ def _load_income_csv(filepath: Path, filing_id: uuid.UUID) -> list[IncomeEntry]:
     with open(filepath, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
+            category = row["category"].strip()
+            amount_lkr = _dec(row["amount_lkr"]) or Decimal("0")
+            amount_foreign = _dec(row.get("amount_foreign", ""))
+            exchange_rate = _dec(row.get("exchange_rate", ""))
+
+            # Auto-calculate LKR for foreign entries when not provided
+            if category == "foreign_employment" and amount_lkr == 0 and amount_foreign and exchange_rate:
+                amount_lkr = round(amount_foreign * exchange_rate, 2)
+
             entries.append(IncomeEntry(
                 filing_id=filing_id,
-                category=row["category"].strip(),
+                category=category,
                 source_name=_str_or_none(row.get("source_name", "")),
                 account_number=_str_or_none(row.get("account_number", "")),
-                amount_lkr=_dec(row["amount_lkr"]) or Decimal("0"),
-                amount_foreign=_dec(row.get("amount_foreign", "")),
+                amount_lkr=amount_lkr,
+                amount_foreign=amount_foreign,
                 foreign_currency=_str_or_none(row.get("foreign_currency", "")),
-                exchange_rate=_dec(row.get("exchange_rate", "")),
+                exchange_rate=exchange_rate,
                 received_date=_date(row.get("received_date", "")),
                 wht_deducted=_dec(row.get("wht_deducted", "")) or Decimal("0"),
                 paye_deducted=_dec(row.get("paye_deducted", "")) or Decimal("0"),

@@ -303,6 +303,29 @@ export async function toggleAdjustment(filingId: string, adjustmentId: string): 
   return response.data;
 }
 
+export async function bulkToggleAdjustment(
+  filingId: string,
+  ids: string[],
+  active: boolean
+): Promise<{ updated: number }> {
+  const response = await apiClient.post<{ updated: number }>(
+    `/filings/${filingId}/adjustments/bulk-toggle`,
+    { ids, active }
+  );
+  return response.data;
+}
+
+export async function bulkDeleteAdjustment(
+  filingId: string,
+  ids: string[]
+): Promise<{ deleted: number }> {
+  const response = await apiClient.post<{ deleted: number }>(
+    `/filings/${filingId}/adjustments/bulk-delete`,
+    { ids }
+  );
+  return response.data;
+}
+
 // ---- User Dashboard ----
 
 export async function getUserDashboard(userId: string): Promise<UserDashboard> {

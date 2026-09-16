@@ -8,7 +8,7 @@ const SAMPLE_CSV = `category,source_name,account_number,amount_lkr,amount_foreig
 salary,ABC Company,,3600000,,,,,0,450000,Monthly salary
 interest,Bank of Ceylon,1234567890,250000,,,,2025-03-15,25000,0,Savings interest
 interest,NSB,9876543210,180000,,,,2025-06-30,18000,0,FD interest
-foreign_employment,Overseas Corp,,1500000,5000,USD,300,2025-01-20,0,0,Consulting fees
+foreign_employment,Overseas Corp,,,5000,USD,300,2025-01-20,,,Consulting fees
 other,Rental Income,,600000,,,,2025-04-01,0,0,Apartment rent`;
 
 const errorColumns = [
@@ -172,12 +172,12 @@ const UploadPage: React.FC = () => {
                   { key: '1', column: 'category', required: 'Yes', description: 'salary, interest, foreign_employment, or other' },
                   { key: '2', column: 'source_name', required: 'No', description: 'Name of the income source' },
                   { key: '3', column: 'account_number', required: 'No', description: 'Bank account number' },
-                  { key: '4', column: 'amount_lkr', required: 'Yes', description: 'Amount in LKR' },
-                  { key: '5', column: 'amount_foreign', required: 'No', description: 'Foreign currency amount' },
-                  { key: '6', column: 'foreign_currency', required: 'No', description: 'USD, GBP, EUR, etc.' },
-                  { key: '7', column: 'exchange_rate', required: 'No', description: 'Exchange rate to LKR' },
+                  { key: '4', column: 'amount_lkr', required: 'Yes*', description: 'Amount in LKR. *Auto-calculated for foreign entries' },
+                  { key: '5', column: 'amount_foreign', required: 'Foreign', description: 'Foreign currency amount (required for foreign)' },
+                  { key: '6', column: 'foreign_currency', required: 'Foreign', description: 'USD, GBP, EUR, etc.' },
+                  { key: '7', column: 'exchange_rate', required: 'Foreign', description: 'Exchange rate (1 unit → LKR)' },
                   { key: '8', column: 'received_date', required: 'No', description: 'YYYY-MM-DD format' },
-                  { key: '9', column: 'wht_deducted', required: 'No', description: 'WHT amount deducted' },
+                  { key: '9', column: 'wht_deducted', required: 'No', description: 'WHT amount (interest, foreign, other)' },
                   { key: '10', column: 'paye_deducted', required: 'No', description: 'PAYE amount (salary only)' },
                   { key: '11', column: 'description', required: 'No', description: 'Free text description' },
                 ]}

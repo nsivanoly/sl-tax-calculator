@@ -17,6 +17,7 @@ EXPECTED_COLUMNS = [
     "exchange_rate",
     "received_date",
     "wht_deducted",
+    "paye_deducted",
     "description",
 ]
 
@@ -71,19 +72,29 @@ def parse_csv(
                 )
 
             amount_lkr = _parse_decimal(row.get("amount_lkr", ""))
-            if amount_lkr is None:
+            amount_foreign = _parse_decimal(row.get("amount_foreign", ""))
+            exchange_rate = _parse_decimal(row.get("exchange_rate", ""))
+
+            # For non-foreign entries, amount_lkr is required
+            # For foreign entries, it's auto-calculated from amount_foreign × exchange_rate
+            if amount_lkr is None and category != "foreign_employment":
                 raise ValueError("amount_lkr is required")
+            if category == "foreign_employment" and not amount_foreign:
+                raise ValueError("amount_foreign is required for foreign_employment")
+            if category == "foreign_employment" and not exchange_rate:
+                raise ValueError("exchange_rate is required for foreign_employment")
 
             entry = IncomeCreate(
                 category=category,
                 source_name=row.get("source_name", "").strip() or None,
                 account_number=row.get("account_number", "").strip() or None,
-                amount_lkr=amount_lkr,
-                amount_foreign=_parse_decimal(row.get("amount_foreign", "")),
+                amount_lkr=amount_lkr or 0.0,
+                amount_foreign=amount_foreign,
                 foreign_currency=row.get("foreign_currency", "").strip() or None,
-                exchange_rate=_parse_decimal(row.get("exchange_rate", "")),
+                exchange_rate=exchange_rate,
                 received_date=_parse_date(row.get("received_date", "")),
                 wht_deducted=_parse_decimal(row.get("wht_deducted", "")) or Decimal("0"),
+                paye_deducted=_parse_decimal(row.get("paye_deducted", "")) or Decimal("0"),
                 description=row.get("description", "").strip() or None,
             )
             valid_entries.append(entry)

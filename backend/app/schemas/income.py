@@ -1,14 +1,14 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class IncomeCreate(BaseModel):
     category: str
     source_name: str | None = None
     account_number: str | None = None
-    amount_lkr: float
+    amount_lkr: float = 0.0
     amount_foreign: float | None = None
     foreign_currency: str | None = None
     exchange_rate: float | None = None
@@ -17,6 +17,12 @@ class IncomeCreate(BaseModel):
     paye_deducted: float = 0.0
     description: str | None = None
     is_active: bool = True
+
+    @model_validator(mode="after")
+    def auto_calc_lkr(self) -> "IncomeCreate":
+        if self.category == "foreign_employment" and self.amount_foreign and self.exchange_rate:
+            self.amount_lkr = round(self.amount_foreign * self.exchange_rate, 2)
+        return self
 
 
 class IncomeUpdate(BaseModel):

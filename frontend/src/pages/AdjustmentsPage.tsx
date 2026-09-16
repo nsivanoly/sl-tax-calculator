@@ -15,13 +15,15 @@ import {
   Tag,
   Tooltip,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, StopOutlined } from '@ant-design/icons';
 import {
   getAdjustments,
   createAdjustment,
   updateAdjustment,
   deleteAdjustment,
   toggleAdjustment,
+  bulkToggleAdjustment,
+  bulkDeleteAdjustment,
 } from '../api/client';
 import type { TaxAdjustment, AdjustmentCreate } from '../types';
 import { useFilingContext } from '../context/AuthContext';
@@ -52,6 +54,7 @@ const AdjustmentsPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [form] = Form.useForm();
   const adjustmentType = Form.useWatch('adjustment_type', form);
 
@@ -108,6 +111,30 @@ const AdjustmentsPage: React.FC = () => {
       fetchAdjustments();
     } catch {
       message.error('Failed to delete adjustment');
+    }
+  };
+
+  const handleBulkToggle = async (active: boolean) => {
+    try {
+      const ids = selectedRowKeys.map(String);
+      const { updated } = await bulkToggleAdjustment(filingId, ids, active);
+      message.success(`${updated} adjustment(s) ${active ? 'enabled' : 'disabled'}`);
+      setSelectedRowKeys([]);
+      fetchAdjustments();
+    } catch {
+      message.error('Failed to update adjustments');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const ids = selectedRowKeys.map(String);
+      const { deleted } = await bulkDeleteAdjustment(filingId, ids);
+      message.success(`${deleted} adjustment(s) deleted`);
+      setSelectedRowKeys([]);
+      fetchAdjustments();
+    } catch {
+      message.error('Failed to delete adjustments');
     }
   };
 
@@ -268,13 +295,66 @@ const AdjustmentsPage: React.FC = () => {
           </Button>
         </div>
 
+        {selectedRowKeys.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '10px 20px',
+              background: '#e6f4ff',
+              borderBottom: '1px solid #91caff',
+            }}
+          >
+            <span style={{ fontWeight: 600, fontSize: 13, color: '#1677ff' }}>
+              {selectedRowKeys.length} selected
+            </span>
+            <Button
+              size="small"
+              icon={<CheckOutlined />}
+              onClick={() => handleBulkToggle(true)}
+              style={{ borderRadius: 6 }}
+            >
+              Enable
+            </Button>
+            <Button
+              size="small"
+              icon={<StopOutlined />}
+              onClick={() => handleBulkToggle(false)}
+              style={{ borderRadius: 6 }}
+            >
+              Disable
+            </Button>
+            <Popconfirm
+              title={`Delete ${selectedRowKeys.length} adjustment(s)?`}
+              onConfirm={handleBulkDelete}
+            >
+              <Button size="small" danger icon={<DeleteOutlined />} style={{ borderRadius: 6 }}>
+                Delete
+              </Button>
+            </Popconfirm>
+            <Button type="link" size="small" onClick={() => setSelectedRowKeys([])}>
+              Clear
+            </Button>
+          </div>
+        )}
+
         <div style={{ padding: 20 }}>
           <Spin spinning={loading}>
             <Table
               className="filing-table"
               dataSource={adjustments.map((a) => ({ ...a, key: a.id }))}
               columns={columns}
-              pagination={false}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys),
+              }}
+              pagination={{
+                defaultPageSize: 20,
+                pageSizeOptions: ['10', '20', '50', '100'],
+                showSizeChanger: true,
+                showTotal: (total, range) => `${range[0]}–${range[1]} of ${total}`,
+              }}
               size="middle"
               rowClassName={(record) => `filing-row${record.is_active ? '' : ' row-inactive'}`}
               locale={{ emptyText: 'No adjustments yet. Click "Add Adjustment" to get started.' }}

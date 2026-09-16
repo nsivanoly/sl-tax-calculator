@@ -7,7 +7,7 @@ interest,Island Finance,FD-200001,72000.00,,,,2026-03-31,7200.00,,Island Finance
 interest,Island Finance,FD-200002,55000.00,,,,2026-03-31,5500.00,,Island Finance FD interest
 interest,Metro Bank,SA-300001,12500.00,,,,2026-03-31,1250.00,,Metro Bank savings interest
 interest,Metro Bank,FD-300002,92000.00,,,,2026-03-31,9200.00,,Metro Bank FD interest
-foreign_employment,Overseas Consulting,,350000.00,1200.00,USD,291.67,2025-06-15,,,USD remote consulting
-foreign_employment,Overseas Consulting,,380000.00,1300.00,USD,292.31,2025-09-15,,,USD remote consulting
-foreign_employment,Overseas Consulting,,420000.00,1425.00,USD,294.74,2025-12-15,,,USD remote consulting
-foreign_employment,Overseas Consulting,,460000.00,1520.00,USD,302.63,2026-03-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,,1200.00,USD,291.67,2025-06-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,,1300.00,USD,292.31,2025-09-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,,1425.00,USD,294.74,2025-12-15,,,USD remote consulting
+foreign_employment,Overseas Consulting,,,1520.00,EUR,302.63,2026-03-15,,,EUR remote consulting

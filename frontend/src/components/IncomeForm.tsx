@@ -54,6 +54,15 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   const category = Form.useWatch('category', form);
   const amountLkr = Form.useWatch('amount_lkr', form);
   const whtDeducted = Form.useWatch('wht_deducted', form);
+  const amountForeign = Form.useWatch('amount_foreign', form);
+  const exchangeRate = Form.useWatch('exchange_rate', form);
+  const isForeignCategory = category === 'foreign_employment';
+
+  useEffect(() => {
+    if (isForeignCategory && amountForeign && exchangeRate) {
+      form.setFieldValue('amount_lkr', Math.round(amountForeign * exchangeRate));
+    }
+  }, [amountForeign, exchangeRate, isForeignCategory, form]);
 
   const isEdit = !!initialValues && Object.keys(initialValues).length > 0;
 
@@ -132,35 +141,53 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           <Input placeholder="e.g. bank account / employee no." />
         </Form.Item>
 
-        <Form.Item
-          name="amount_lkr"
-          label="Amount (LKR)"
-          rules={[{ required: true, message: 'Please enter the amount in LKR' }]}
-        >
-          <InputNumber<number>
-            style={{ width: '100%' }}
-            min={0}
-            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-            parser={(value) => (value ? Number(value.replace(/,/g, '')) : 0)}
-          />
-        </Form.Item>
-
         <Form.Item noStyle shouldUpdate={(prev, curr) => prev.category !== curr.category}>
           {() =>
             category === 'foreign_employment' ? (
               <>
-                <Form.Item name="amount_foreign" label="Amount (Foreign Currency)">
-                  <InputNumber style={{ width: '100%' }} min={0} />
+                <Form.Item
+                  name="amount_foreign"
+                  label="Amount (Foreign Currency)"
+                  rules={[{ required: true, message: 'Please enter the foreign amount' }]}
+                >
+                  <InputNumber<number>
+                    style={{ width: '100%' }}
+                    min={0}
+                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => (value ? Number(value.replace(/,/g, '')) : 0)}
+                  />
                 </Form.Item>
-                <Form.Item name="foreign_currency" label="Currency">
-                  <Select options={CURRENCY_OPTIONS} placeholder="Select currency" allowClear />
+                <Form.Item
+                  name="foreign_currency"
+                  label="Currency"
+                  rules={[{ required: true, message: 'Please select the currency' }]}
+                >
+                  <Select options={CURRENCY_OPTIONS} placeholder="Select currency" />
                 </Form.Item>
-                <Form.Item name="exchange_rate" label="Exchange Rate">
+                <Form.Item
+                  name="exchange_rate"
+                  label="Exchange Rate (1 unit → LKR)"
+                  rules={[{ required: true, message: 'Please enter the exchange rate' }]}
+                >
                   <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
                 </Form.Item>
               </>
             ) : null
           }
+        </Form.Item>
+
+        <Form.Item
+          name="amount_lkr"
+          label={isForeignCategory ? 'Amount (LKR) — auto-calculated' : 'Amount (LKR)'}
+          rules={[{ required: true, message: 'Please enter the amount in LKR' }]}
+        >
+          <InputNumber<number>
+            style={{ width: '100%' }}
+            min={0}
+            disabled={isForeignCategory}
+            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+            parser={(value) => (value ? Number(value.replace(/,/g, '')) : 0)}
+          />
         </Form.Item>
 
         <Form.Item name="received_date" label="Received Date">
